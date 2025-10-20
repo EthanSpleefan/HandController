@@ -23,11 +23,12 @@ PREPARATION: This program has libraries that only work with Python 3.9. Please e
    ```bash
    pip install <library>
    ```
+   and replace `<library>` with the name of the required library.
+   
    or 
    
    ```bash
    pip install -r requirements. txt
    ```
-   and replace `<library>` with the name of the required library.
 3. **Run the file***: Open `app.py` in your code editor and choose to Run the script.
 =======
