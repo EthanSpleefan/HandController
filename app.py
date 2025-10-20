@@ -21,8 +21,6 @@ Author: Based on MediaPipe hand gesture recognition
 """
 import csv
 import copy
-import pyautogui
-import time
 import argparse
 import itertools
 from collections import Counter
@@ -68,7 +66,7 @@ def get_args():
                         default=0.7)
     parser.add_argument("--min_tracking_confidence",
                         help='min_tracking_confidence',
-                        type=int,
+                        type=float,
                         default=0.5)
 
     args = parser.parse_args()
@@ -360,12 +358,8 @@ def pre_process_landmark(landmark_list):
         itertools.chain.from_iterable(temp_landmark_list))
 
     # Normalization
-    max_value = max(list(map(abs, temp_landmark_list)))
-
-    def normalize_(n):
-        return n / max_value
-
-    temp_landmark_list = list(map(normalize_, temp_landmark_list))
+    max_value = max(map(abs, temp_landmark_list))
+    temp_landmark_list = [n / max_value for n in temp_landmark_list]
 
     return temp_landmark_list
 
