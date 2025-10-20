@@ -17,7 +17,7 @@ PREPARATION: This program has libraries that only work with Python 3.9. Please e
 1. **Installation**: Clone this repository to your local machine.
 
    ```bash
-   git clone https://github.com/EthanSpleefan/HandGuesture-SoftwareController.git
+   git clone https://github.com/EthanSpleefan/HandController.git
    ```
 2. **Dependencies**: Ensure all libraries listed in [`requirements.txt`](./requirements.txt) are installed on your machine. You can install them with:
    ```bash
@@ -28,7 +28,30 @@ PREPARATION: This program has libraries that only work with Python 3.9. Please e
    or 
    
    ```bash
-   pip install -r requirements. txt
+   pip install -r requirements.txt
    ```
-3. **Run the file***: Open `app.py` in your code editor and choose to Run the script.
-=======
+3. **Run the file**: Open `app.py` in your code editor and run the script, or execute:
+   ```bash
+   python app.py
+   ```
+
+## Usage
+
+Once the application is running:
+- Press **ESC** to exit the application
+- Press **k** to enter keypoint logging mode
+- Press **h** to enter point history logging mode
+- Press **n** to return to normal mode
+- Press **0-9** to select a label number when in logging mode
+
+## Hand Gestures
+
+The application recognizes various hand gestures that can be customized by training the models. Default gestures include:
+- Index finger pointing (for navigation)
+- Open hand
+- Closed fist
+- And more (see `model/keypoint_classifier/keypoint_classifier_label.csv`)
+
+## Contributing
+
+Please see [CONTRIBUTORS.md](./CONTRIBUTORS.md) for guidelines on how to contribute to this project.

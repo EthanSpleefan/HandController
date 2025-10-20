@@ -1,5 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Hand Gesture Recognition Application
+
+This application uses MediaPipe for hand detection and custom TensorFlow Lite models
+for gesture classification. It recognizes hand gestures in real-time from a webcam
+feed and can control keyboard inputs based on recognized gestures.
+
+Key features:
+- Real-time hand tracking and gesture recognition
+- Keyboard control based on hand gestures
+- Data logging mode for training custom gestures
+- Configurable camera settings and confidence thresholds
+
+Usage:
+    python app.py [--device DEVICE] [--width WIDTH] [--height HEIGHT]
+                  [--min_detection_confidence CONF] [--min_tracking_confidence CONF]
+
+Author: Based on MediaPipe hand gesture recognition
+"""
 import csv
 import copy
 import pyautogui
@@ -17,10 +36,25 @@ import mediapipe as mp
 from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
-previous_hand_sign_id = None  # Initialize to None
+
+
+# Global variable to track previous hand sign for keyboard control
+previous_hand_sign_id = None
 
 
 def get_args():
+    """
+    Parse command-line arguments for the hand gesture recognition application.
+    
+    Returns:
+        argparse.Namespace: Parsed arguments containing:
+            - device: Camera device ID (default: 0)
+            - width: Camera capture width in pixels (default: 960)
+            - height: Camera capture height in pixels (default: 540)
+            - use_static_image_mode: Whether to use static image mode
+            - min_detection_confidence: Minimum confidence for hand detection (default: 0.7)
+            - min_tracking_confidence: Minimum confidence for hand tracking (default: 0.5)
+    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--device", type=int, default=0)
@@ -43,6 +77,16 @@ def get_args():
 
 
 def main():
+    """
+    Main function that runs the hand gesture recognition application.
+    
+    This function:
+    1. Initializes the camera and MediaPipe hand detection
+    2. Loads the gesture classification models
+    3. Runs the main loop to process video frames
+    4. Recognizes hand gestures and controls keyboard inputs
+    5. Displays the processed video with annotations
+    """
     # Argument parsing #################################################################
     args = get_args()
 
@@ -151,9 +195,9 @@ def main():
                     point_history.append([0, 0])
 
                 
-                #Control Keyboard Inputs
-
-                global previous_hand_sign_id  # Declare previous_hand_sign_id as a global variable
+                # Keyboard control based on hand gestures
+                # Uses global variable to track state and release keys when gesture changes
+                global previous_hand_sign_id
     
                 # Release the previous key if it's different from the current hand_sign_id
                 if previous_hand_sign_id is not None and previous_hand_sign_id != hand_sign_id:
@@ -161,12 +205,14 @@ def main():
                     keyboard.release('left')
                 
                 # Handle the current hand_sign_id
+                # hand_sign_id == 1: Right gesture - press right arrow key
+                # hand_sign_id == 3: Left gesture - press left arrow key
                 if hand_sign_id == 1:
                     keyboard.press('right')
                 elif hand_sign_id == 3:
                     keyboard.press('left')
                 
-                # Update the previous_hand_sign_id
+                # Update the previous_hand_sign_id for next iteration
                 previous_hand_sign_id = hand_sign_id
 
                 # Finger gesture classification
@@ -205,6 +251,18 @@ def main():
 
 
 def select_mode(key, mode):
+    """
+    Select the application mode based on keyboard input.
+    
+    Args:
+        key (int): The ASCII value of the pressed key
+        mode (int): Current mode (0=normal, 1=keypoint logging, 2=point history logging)
+    
+    Returns:
+        tuple: (number, mode) where:
+            - number: Selected number (0-9) or -1 if no number key pressed
+            - mode: Updated mode based on key press
+    """
     number = -1
     if 48 <= key <= 57:  # 0 ~ 9
         number = key - 48
@@ -218,6 +276,17 @@ def select_mode(key, mode):
 
 
 def calc_bounding_rect(image, landmarks):
+    """
+    Calculate the bounding rectangle for detected hand landmarks.
+    
+    Args:
+        image (numpy.ndarray): Input image
+        landmarks (mediapipe.framework.formats.landmark_pb2.NormalizedLandmarkList): 
+            Hand landmarks from MediaPipe
+    
+    Returns:
+        list: Bounding rectangle coordinates [x1, y1, x2, y2]
+    """
     image_width, image_height = image.shape[1], image.shape[0]
 
     landmark_array = np.empty((0, 2), int)
@@ -236,6 +305,17 @@ def calc_bounding_rect(image, landmarks):
 
 
 def calc_landmark_list(image, landmarks):
+    """
+    Convert MediaPipe hand landmarks to a list of pixel coordinates.
+    
+    Args:
+        image (numpy.ndarray): Input image
+        landmarks (mediapipe.framework.formats.landmark_pb2.NormalizedLandmarkList): 
+            Hand landmarks from MediaPipe
+    
+    Returns:
+        list: List of [x, y] coordinates for each landmark point
+    """
     image_width, image_height = image.shape[1], image.shape[0]
 
     landmark_point = []
@@ -252,6 +332,18 @@ def calc_landmark_list(image, landmarks):
 
 
 def pre_process_landmark(landmark_list):
+    """
+    Pre-process landmark coordinates for model input.
+    
+    Converts absolute coordinates to relative coordinates, normalizes them,
+    and flattens the list for classifier input.
+    
+    Args:
+        landmark_list (list): List of [x, y] landmark coordinates
+    
+    Returns:
+        list: Normalized and flattened landmark coordinates
+    """
     temp_landmark_list = copy.deepcopy(landmark_list)
 
     # Convert to relative coordinates
@@ -279,6 +371,18 @@ def pre_process_landmark(landmark_list):
 
 
 def pre_process_point_history(image, point_history):
+    """
+    Pre-process point history for gesture classification.
+    
+    Converts point history to relative coordinates normalized by image dimensions.
+    
+    Args:
+        image (numpy.ndarray): Input image
+        point_history (collections.deque): History of finger tip positions
+    
+    Returns:
+        list: Normalized and flattened point history coordinates
+    """
     image_width, image_height = image.shape[1], image.shape[0]
 
     temp_point_history = copy.deepcopy(point_history)
@@ -302,6 +406,15 @@ def pre_process_point_history(image, point_history):
 
 
 def logging_csv(number, mode, landmark_list, point_history_list):
+    """
+    Log landmark or point history data to CSV files for training.
+    
+    Args:
+        number (int): Label number (0-9)
+        mode (int): Logging mode (0=off, 1=keypoint, 2=point history)
+        landmark_list (list): Pre-processed landmark coordinates
+        point_history_list (list): Pre-processed point history coordinates
+    """
     if mode == 0:
         pass
     if mode == 1 and (0 <= number <= 9):
@@ -318,6 +431,16 @@ def logging_csv(number, mode, landmark_list, point_history_list):
 
 
 def draw_landmarks(image, landmark_point):
+    """
+    Draw hand landmarks and connections on the image.
+    
+    Args:
+        image (numpy.ndarray): Image to draw on
+        landmark_point (list): List of [x, y] landmark coordinates
+    
+    Returns:
+        numpy.ndarray: Image with landmarks drawn
+    """
     if len(landmark_point) > 0:
         # Thumb
         cv.line(image, tuple(landmark_point[2]), tuple(landmark_point[3]),
@@ -417,87 +540,87 @@ def draw_landmarks(image, landmark_point):
 
     # Key Points
     for index, landmark in enumerate(landmark_point):
-        if index == 0:  # 手首1
+        if index == 0:  # Wrist 1
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 1:  # 手首2
+        if index == 1:  # Wrist 2
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 2:  # 親指：付け根
+        if index == 2:  # Thumb: Base
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 3:  # 親指：第1関節
+        if index == 3:  # Thumb: 1st joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 4:  # 親指：指先
+        if index == 4:  # Thumb: Tip
             cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 5:  # 人差指：付け根
+        if index == 5:  # Index finger: Base
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 6:  # 人差指：第2関節
+        if index == 6:  # Index finger: 2nd joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 7:  # 人差指：第1関節
+        if index == 7:  # Index finger: 1st joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 8:  # 人差指：指先
+        if index == 8:  # Index finger: Tip
             cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 9:  # 中指：付け根
+        if index == 9:  # Middle finger: Base
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 10:  # 中指：第2関節
+        if index == 10:  # Middle finger: 2nd joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 11:  # 中指：第1関節
+        if index == 11:  # Middle finger: 1st joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 12:  # 中指：指先
+        if index == 12:  # Middle finger: Tip
             cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 13:  # 薬指：付け根
+        if index == 13:  # Ring finger: Base
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 14:  # 薬指：第2関節
+        if index == 14:  # Ring finger: 2nd joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 15:  # 薬指：第1関節
+        if index == 15:  # Ring finger: 1st joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 16:  # 薬指：指先
+        if index == 16:  # Ring finger: Tip
             cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
-        if index == 17:  # 小指：付け根
+        if index == 17:  # Little finger: Base
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 18:  # 小指：第2関節
+        if index == 18:  # Little finger: 2nd joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 19:  # 小指：第1関節
+        if index == 19:  # Little finger: 1st joint
             cv.circle(image, (landmark[0], landmark[1]), 5, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 5, (0, 0, 0), 1)
-        if index == 20:  # 小指：指先
+        if index == 20:  # Little finger: Tip
             cv.circle(image, (landmark[0], landmark[1]), 8, (255, 255, 255),
                       -1)
             cv.circle(image, (landmark[0], landmark[1]), 8, (0, 0, 0), 1)
@@ -506,6 +629,17 @@ def draw_landmarks(image, landmark_point):
 
 
 def draw_bounding_rect(use_brect, image, brect):
+    """
+    Draw a bounding rectangle around the detected hand.
+    
+    Args:
+        use_brect (bool): Whether to draw the bounding rectangle
+        image (numpy.ndarray): Image to draw on
+        brect (list): Bounding rectangle coordinates [x1, y1, x2, y2]
+    
+    Returns:
+        numpy.ndarray: Image with bounding rectangle drawn
+    """
     if use_brect:
         # Outer rectangle
         cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
@@ -516,6 +650,20 @@ def draw_bounding_rect(use_brect, image, brect):
 
 def draw_info_text(image, brect, handedness, hand_sign_text,
                    finger_gesture_text):
+    """
+    Draw information text showing detected hand and gesture on the image.
+    
+    Args:
+        image (numpy.ndarray): Image to draw on
+        brect (list): Bounding rectangle coordinates
+        handedness (mediapipe.framework.formats.classification_pb2.ClassificationList): 
+            Hand classification (Left/Right)
+        hand_sign_text (str): Detected hand sign label
+        finger_gesture_text (str): Detected finger gesture label
+    
+    Returns:
+        numpy.ndarray: Image with information text drawn
+    """
     cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[1] - 22),
                  (0, 0, 0), -1)
 
@@ -536,6 +684,16 @@ def draw_info_text(image, brect, handedness, hand_sign_text,
 
 
 def draw_point_history(image, point_history):
+    """
+    Draw the point history trail on the image.
+    
+    Args:
+        image (numpy.ndarray): Image to draw on
+        point_history (collections.deque): History of finger tip positions
+    
+    Returns:
+        numpy.ndarray: Image with point history drawn
+    """
     for index, point in enumerate(point_history):
         if point[0] != 0 and point[1] != 0:
             cv.circle(image, (point[0], point[1]), 1 + int(index / 2),
@@ -545,6 +703,18 @@ def draw_point_history(image, point_history):
 
 
 def draw_info(image, fps, mode, number):
+    """
+    Draw FPS and mode information on the image.
+    
+    Args:
+        image (numpy.ndarray): Image to draw on
+        fps (float): Current frames per second
+        mode (int): Current application mode
+        number (int): Selected label number
+    
+    Returns:
+        numpy.ndarray: Image with information drawn
+    """
     cv.putText(image, "FPS:" + str(fps), (10, 30), cv.FONT_HERSHEY_SIMPLEX,
                1.0, (0, 0, 0), 4, cv.LINE_AA)
     cv.putText(image, "FPS:" + str(fps), (10, 30), cv.FONT_HERSHEY_SIMPLEX,
