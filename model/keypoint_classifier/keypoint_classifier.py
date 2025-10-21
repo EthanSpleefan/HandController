@@ -13,10 +13,10 @@ import tensorflow as tf
 class KeyPointClassifier(object):
     """
     Classify hand gestures from preprocessed landmark keypoints.
-    
+
     This classifier uses a TensorFlow Lite model to identify hand gestures
     based on normalized hand landmark positions.
-    
+
     Attributes:
         interpreter (tf.lite.Interpreter): TensorFlow Lite interpreter for the model
         input_details (list): Input tensor details
@@ -29,7 +29,7 @@ class KeyPointClassifier(object):
     ):
         """
         Initialize the keypoint classifier.
-        
+
         Args:
             model_path (str, optional): Path to the TensorFlow Lite model file.
                 Defaults to 'model/keypoint_classifier/keypoint_classifier.tflite'.
@@ -49,11 +49,11 @@ class KeyPointClassifier(object):
     ):
         """
         Classify a hand gesture from landmark keypoints.
-        
+
         Args:
             landmark_list (list): Preprocessed and normalized landmark coordinates
                 as a flat list of floats.
-        
+
         Returns:
             int: The index of the predicted gesture class.
         """

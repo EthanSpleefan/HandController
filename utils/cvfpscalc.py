@@ -11,10 +11,10 @@ import cv2 as cv
 class CvFpsCalc(object):
     """
     Calculate frames per second (FPS) using a moving average.
-    
+
     This class tracks frame times and calculates FPS based on a rolling
     average of the most recent frame durations.
-    
+
     Attributes:
         _start_tick (int): The starting tick count from OpenCV
         _freq (float): Tick frequency conversion factor to milliseconds
@@ -23,7 +23,7 @@ class CvFpsCalc(object):
     def __init__(self, buffer_len=1):
         """
         Initialize the FPS calculator.
-        
+
         Args:
             buffer_len (int, optional): Number of frames to average for FPS calculation.
                 Larger values provide smoother but less responsive FPS measurements.
@@ -36,9 +36,9 @@ class CvFpsCalc(object):
     def get(self):
         """
         Calculate and return the current FPS.
-        
+
         This method should be called once per frame to update the FPS calculation.
-        
+
         Returns:
             float: The calculated frames per second, rounded to 2 decimal places.
         """

@@ -13,10 +13,10 @@ import tensorflow as tf
 class PointHistoryClassifier(object):
     """
     Classify finger gestures from point history data.
-    
+
     This classifier uses a TensorFlow Lite model to identify finger movement
     patterns based on a sequence of finger tip positions over time.
-    
+
     Attributes:
         interpreter (tf.lite.Interpreter): TensorFlow Lite interpreter for the model
         input_details (list): Input tensor details
@@ -33,7 +33,7 @@ class PointHistoryClassifier(object):
     ):
         """
         Initialize the point history classifier.
-        
+
         Args:
             model_path (str, optional): Path to the TensorFlow Lite model file.
                 Defaults to 'model/point_history_classifier/point_history_classifier.tflite'.
@@ -60,11 +60,11 @@ class PointHistoryClassifier(object):
     ):
         """
         Classify a finger gesture from point history data.
-        
+
         Args:
             point_history (list): Preprocessed and normalized point history coordinates
                 as a flat list of floats.
-        
+
         Returns:
             int: The index of the predicted gesture class, or invalid_value if
                 confidence is below the threshold.
