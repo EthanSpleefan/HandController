@@ -43,7 +43,7 @@ previous_hand_sign_id = None
 def get_args():
     """
     Parse command-line arguments for the hand gesture recognition application.
-    
+
     Returns:
         argparse.Namespace: Parsed arguments containing:
             - device: Camera device ID (default: 0)
@@ -74,10 +74,10 @@ def get_args():
     return args
 
 
-def main():
+def main():  # noqa: C901
     """
     Main function that runs the hand gesture recognition application.
-    
+
     This function:
     1. Initializes the camera and MediaPipe hand detection
     2. Loads the gesture classification models
@@ -207,7 +207,7 @@ def main():
                     keyboard.press('right')
                 elif hand_sign_id == 3:
                     keyboard.press('left')
-                
+
                 # Update the previous_hand_sign_id for next iteration
                 elif hand_sign_id == 2:
                     keyboard.press('up')
@@ -258,11 +258,11 @@ def main():
 def select_mode(key, mode):
     """
     Select the application mode based on keyboard input.
-    
+
     Args:
         key (int): The ASCII value of the pressed key
         mode (int): Current mode (0=normal, 1=keypoint logging, 2=point history logging)
-    
+
     Returns:
         tuple: (number, mode) where:
             - number: Selected number (0-9) or -1 if no number key pressed
@@ -283,12 +283,12 @@ def select_mode(key, mode):
 def calc_bounding_rect(image, landmarks):
     """
     Calculate the bounding rectangle for detected hand landmarks.
-    
+
     Args:
         image (numpy.ndarray): Input image
-        landmarks (mediapipe.framework.formats.landmark_pb2.NormalizedLandmarkList): 
+        landmarks (mediapipe.framework.formats.landmark_pb2.NormalizedLandmarkList):
             Hand landmarks from MediaPipe
-    
+
     Returns:
         list: Bounding rectangle coordinates [x1, y1, x2, y2]
     """
@@ -312,12 +312,12 @@ def calc_bounding_rect(image, landmarks):
 def calc_landmark_list(image, landmarks):
     """
     Convert MediaPipe hand landmarks to a list of pixel coordinates.
-    
+
     Args:
         image (numpy.ndarray): Input image
-        landmarks (mediapipe.framework.formats.landmark_pb2.NormalizedLandmarkList): 
+        landmarks (mediapipe.framework.formats.landmark_pb2.NormalizedLandmarkList):
             Hand landmarks from MediaPipe
-    
+
     Returns:
         list: List of [x, y] coordinates for each landmark point
     """
@@ -339,13 +339,13 @@ def calc_landmark_list(image, landmarks):
 def pre_process_landmark(landmark_list):
     """
     Pre-process landmark coordinates for model input.
-    
+
     Converts absolute coordinates to relative coordinates, normalizes them,
     and flattens the list for classifier input.
-    
+
     Args:
         landmark_list (list): List of [x, y] landmark coordinates
-    
+
     Returns:
         list: Normalized and flattened landmark coordinates
     """
@@ -374,13 +374,13 @@ def pre_process_landmark(landmark_list):
 def pre_process_point_history(image, point_history):
     """
     Pre-process point history for gesture classification.
-    
+
     Converts point history to relative coordinates normalized by image dimensions.
-    
+
     Args:
         image (numpy.ndarray): Input image
         point_history (collections.deque): History of finger tip positions
-    
+
     Returns:
         list: Normalized and flattened point history coordinates
     """
@@ -409,7 +409,7 @@ def pre_process_point_history(image, point_history):
 def logging_csv(number, mode, landmark_list, point_history_list):
     """
     Log landmark or point history data to CSV files for training.
-    
+
     Args:
         number (int): Label number (0-9)
         mode (int): Logging mode (0=off, 1=keypoint, 2=point history)
@@ -431,14 +431,14 @@ def logging_csv(number, mode, landmark_list, point_history_list):
     return
 
 
-def draw_landmarks(image, landmark_point):
+def draw_landmarks(image, landmark_point):  # noqa: C901
     """
     Draw hand landmarks and connections on the image.
-    
+
     Args:
         image (numpy.ndarray): Image to draw on
         landmark_point (list): List of [x, y] landmark coordinates
-    
+
     Returns:
         numpy.ndarray: Image with landmarks drawn
     """
@@ -632,12 +632,12 @@ def draw_landmarks(image, landmark_point):
 def draw_bounding_rect(use_brect, image, brect):
     """
     Draw a bounding rectangle around the detected hand.
-    
+
     Args:
         use_brect (bool): Whether to draw the bounding rectangle
         image (numpy.ndarray): Image to draw on
         brect (list): Bounding rectangle coordinates [x1, y1, x2, y2]
-    
+
     Returns:
         numpy.ndarray: Image with bounding rectangle drawn
     """
@@ -653,15 +653,15 @@ def draw_info_text(image, brect, handedness, hand_sign_text,
                    finger_gesture_text):
     """
     Draw information text showing detected hand and gesture on the image.
-    
+
     Args:
         image (numpy.ndarray): Image to draw on
         brect (list): Bounding rectangle coordinates
-        handedness (mediapipe.framework.formats.classification_pb2.ClassificationList): 
+        handedness (mediapipe.framework.formats.classification_pb2.ClassificationList):
             Hand classification (Left/Right)
         hand_sign_text (str): Detected hand sign label
         finger_gesture_text (str): Detected finger gesture label
-    
+
     Returns:
         numpy.ndarray: Image with information text drawn
     """
@@ -687,11 +687,11 @@ def draw_info_text(image, brect, handedness, hand_sign_text,
 def draw_point_history(image, point_history):
     """
     Draw the point history trail on the image.
-    
+
     Args:
         image (numpy.ndarray): Image to draw on
         point_history (collections.deque): History of finger tip positions
-    
+
     Returns:
         numpy.ndarray: Image with point history drawn
     """
@@ -706,13 +706,13 @@ def draw_point_history(image, point_history):
 def draw_info(image, fps, mode, number):
     """
     Draw FPS and mode information on the image.
-    
+
     Args:
         image (numpy.ndarray): Image to draw on
         fps (float): Current frames per second
         mode (int): Current application mode
         number (int): Selected label number
-    
+
     Returns:
         numpy.ndarray: Image with information drawn
     """
