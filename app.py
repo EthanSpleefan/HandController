@@ -12,10 +12,12 @@ Key features:
 - Keyboard control based on hand gestures
 - Data logging mode for training custom gestures
 - Configurable camera settings and confidence thresholds
+- Configuration file for gesture-to-key mappings
 
 Usage:
     python app.py [--device DEVICE] [--width WIDTH] [--height HEIGHT]
                   [--min_detection_confidence CONF] [--min_tracking_confidence CONF]
+                  [--config CONFIG_FILE]
 
 Author: Based on MediaPipe hand gesture recognition
 """
@@ -23,6 +25,8 @@ import csv
 import copy
 import argparse
 import itertools
+import json
+import os
 from collections import Counter
 from collections import deque
 import keyboard
@@ -36,8 +40,9 @@ from model import KeyPointClassifier
 from model import PointHistoryClassifier
 
 
-# Global variable to track previous hand sign for keyboard control
+# Global variables for keyboard control
 previous_hand_sign_id = None
+pressed_keys = set()  # Track currently pressed keys
 
 
 def get_args():
@@ -52,6 +57,7 @@ def get_args():
             - use_static_image_mode: Whether to use static image mode
             - min_detection_confidence: Minimum confidence for hand detection (default: 0.7)
             - min_tracking_confidence: Minimum confidence for hand tracking (default: 0.5)
+            - config: Path to gesture configuration file (default: gesture_config.json)
     """
     parser = argparse.ArgumentParser()
 
@@ -68,10 +74,81 @@ def get_args():
                         help='min_tracking_confidence',
                         type=float,
                         default=0.5)
+    parser.add_argument("--config",
+                        help='path to gesture configuration file',
+                        type=str,
+                        default='gesture_config.json')
 
     args = parser.parse_args()
 
     return args
+
+
+def load_gesture_config(config_path):
+    """
+    Load gesture-to-key mappings from a JSON configuration file.
+    
+    Args:
+        config_path (str): Path to the configuration file
+    
+    Returns:
+        dict: Gesture mappings dictionary where keys are gesture IDs (as strings)
+              and values are dictionaries with 'key' and 'description' fields.
+              Returns empty dict if file doesn't exist or can't be loaded.
+    """
+    if not os.path.exists(config_path):
+        print(f"Warning: Configuration file '{config_path}' not found. Keyboard control disabled.")
+        return {}
+    
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        return config.get('gesture_mappings', {})
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"Error loading configuration file '{config_path}': {e}")
+        print("Keyboard control disabled.")
+        return {}
+
+
+def handle_keyboard_control(hand_sign_id, gesture_mappings):
+    """
+    Handle keyboard control based on detected gesture and configuration.
+    
+    This function manages keyboard input simulation by:
+    1. Releasing previously pressed keys that are no longer active
+    2. Pressing keys associated with the current gesture
+    
+    Args:
+        hand_sign_id (int): The detected gesture ID
+        gesture_mappings (dict): Gesture-to-key mappings from configuration
+    
+    Global Variables:
+        previous_hand_sign_id: Tracks the previous gesture to release keys
+        pressed_keys: Set of currently pressed keys
+    """
+    global previous_hand_sign_id, pressed_keys
+    
+    # Convert hand_sign_id to string for lookup in config
+    current_gesture = str(hand_sign_id)
+    previous_gesture = str(previous_hand_sign_id) if previous_hand_sign_id is not None else None
+    
+    # Release keys from previous gesture if gesture changed
+    if previous_gesture is not None and previous_gesture != current_gesture:
+        if previous_gesture in gesture_mappings:
+            key_to_release = gesture_mappings[previous_gesture]['key']
+            if key_to_release in pressed_keys:
+                keyboard.release(key_to_release)
+                pressed_keys.discard(key_to_release)
+    
+    # Press key for current gesture if mapped
+    if current_gesture in gesture_mappings:
+        key_to_press = gesture_mappings[current_gesture]['key']
+        if key_to_press not in pressed_keys:
+            keyboard.press(key_to_press)
+            pressed_keys.add(key_to_press)
+    
+    # Update previous gesture
+    previous_hand_sign_id = hand_sign_id
 
 
 def main():
@@ -81,9 +158,10 @@ def main():
     This function:
     1. Initializes the camera and MediaPipe hand detection
     2. Loads the gesture classification models
-    3. Runs the main loop to process video frames
-    4. Recognizes hand gestures and controls keyboard inputs
-    5. Displays the processed video with annotations
+    3. Loads the gesture-to-key configuration
+    4. Runs the main loop to process video frames
+    5. Recognizes hand gestures and controls keyboard inputs
+    6. Displays the processed video with annotations
     """
     # Argument parsing #################################################################
     args = get_args()
@@ -95,6 +173,9 @@ def main():
     use_static_image_mode = args.use_static_image_mode
     min_detection_confidence = args.min_detection_confidence
     min_tracking_confidence = args.min_tracking_confidence
+    
+    # Load gesture configuration
+    gesture_mappings = load_gesture_config(args.config)
 
     use_brect = True
 
@@ -192,33 +273,8 @@ def main():
                 else:
                     point_history.append([0, 0])
 
-                # Control Keyboard Inputs
-                global previous_hand_sign_id  # Declare previous_hand_sign_id as a global variable
-
-                # Release the previous key if it's different from the current hand_sign_id
-                if previous_hand_sign_id is not None and previous_hand_sign_id != hand_sign_id:
-                    keyboard.release('right')
-                    keyboard.release('left')
-
-                # Handle the current hand_sign_id
-                # hand_sign_id == 1: Right gesture - press right arrow key
-                # hand_sign_id == 3: Left gesture - press left arrow key
-                if hand_sign_id == 1:
-                    keyboard.press('right')
-                elif hand_sign_id == 3:
-                    keyboard.press('left')
-                
-                # Update the previous_hand_sign_id for next iteration
-                elif hand_sign_id == 2:
-                    keyboard.press('up')
-                import os
-                os.chdir("C:\\Users\\Ethan")
-
-                # if hand_sign_id == 4:
-                #     os.startfile("lock.bat")
-
-                # Update the previous_hand_sign_id
-                previous_hand_sign_id = hand_sign_id
+                # Control Keyboard Inputs using configuration
+                handle_keyboard_control(hand_sign_id, gesture_mappings)
 
                 # Finger gesture classification
                 finger_gesture_id = 0

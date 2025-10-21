@@ -50,14 +50,47 @@ Once the application is running:
 - Press **n** to return to normal mode
 - Press **0-9** to select a label number when in logging mode
 
+### Customizing Gesture Controls
+
+The application uses a configuration file (`gesture_config.json`) to map gestures to keyboard keys. This allows you to customize controls without editing code.
+
+**To modify gesture mappings:**
+
+1. Open `gesture_config.json` in a text editor
+2. Add or modify entries in the `gesture_mappings` section:
+   ```json
+   {
+     "gesture_mappings": {
+       "1": {
+         "key": "right",
+         "description": "Right pointing gesture - press right arrow key"
+       },
+       "2": {
+         "key": "up",
+         "description": "Pointer gesture - press up arrow key"
+       }
+     }
+   }
+   ```
+3. The gesture ID (e.g., "1", "2") corresponds to the trained gesture labels in `model/keypoint_classifier/keypoint_classifier_label.csv`
+4. The `key` field can be any key supported by the [keyboard library](https://github.com/boppreh/keyboard#api) (e.g., 'a', 'space', 'f1', 'left', 'right')
+5. Save the file and restart the application
+
+**To use a different configuration file:**
+```bash
+python app.py --config my_custom_config.json
+```
+
 ## Hand Gestures
 
 The application recognizes various hand gestures that can be customized by training the models. Default gestures include:
 - **Gesture 0**: Open hand
-- **Gesture 1**: Right pointing (triggers right arrow key)
-- **Gesture 2**: Index finger pointing (for drawing/tracking)
-- **Gesture 3**: Left pointing (triggers left arrow key)
+- **Gesture 1**: Right pointing (triggers right arrow key by default)
+- **Gesture 2**: Index finger pointing/pointer (triggers up arrow key by default)
+- **Gesture 3**: Left pointing (triggers left arrow key by default)
 - And more (see `model/keypoint_classifier/keypoint_classifier_label.csv` for full list)
+
+**Note:** The keyboard actions for each gesture can be customized in `gesture_config.json` without modifying code.
 
 ## Project Structure
 
@@ -89,6 +122,7 @@ To train your own gestures:
 - **Gesture Classification**: TensorFlow Lite models for efficient inference
 - **FPS**: Optimized for real-time performance with configurable camera settings
 - **Keyboard Control**: Automatic keyboard input simulation based on recognized gestures
+- **Configuration-based Controls**: JSON configuration file for easy gesture-to-key mapping customization
 
 ## Contributing
 
