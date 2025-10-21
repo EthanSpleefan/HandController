@@ -1,1 +1,1 @@
-from utils.cvfpscalc import CvFpsCalc
+from utils.cvfpscalc import CvFpsCalc  # noqa: F401
