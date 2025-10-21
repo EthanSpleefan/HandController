@@ -192,16 +192,14 @@ def main():
                 else:
                     point_history.append([0, 0])
 
-                
-                # Keyboard control based on hand gestures
-                # Uses global variable to track state and release keys when gesture changes
-                global previous_hand_sign_id
-    
+                # Control Keyboard Inputs
+                global previous_hand_sign_id  # Declare previous_hand_sign_id as a global variable
+
                 # Release the previous key if it's different from the current hand_sign_id
                 if previous_hand_sign_id is not None and previous_hand_sign_id != hand_sign_id:
                     keyboard.release('right')
                     keyboard.release('left')
-                
+
                 # Handle the current hand_sign_id
                 # hand_sign_id == 1: Right gesture - press right arrow key
                 # hand_sign_id == 3: Left gesture - press left arrow key
@@ -211,6 +209,15 @@ def main():
                     keyboard.press('left')
                 
                 # Update the previous_hand_sign_id for next iteration
+                elif hand_sign_id == 2:
+                    keyboard.press('up')
+                import os
+                os.chdir("C:\\Users\\Ethan")
+
+                # if hand_sign_id == 4:
+                #     os.startfile("lock.bat")
+
+                # Update the previous_hand_sign_id
                 previous_hand_sign_id = hand_sign_id
 
                 # Finger gesture classification
