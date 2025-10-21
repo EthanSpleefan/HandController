@@ -1,0 +1,34 @@
+{
+  "gesture_mappings": {
+    "1": {
+      "key": "right",
+      "description": "Right pointing gesture - press right arrow key"
+    },
+    "2": {
+      "key": "up",
+      "description": "Pointer gesture - press up arrow key"
+    },
+    "3": {
+      "key": "left",
+      "description": "Left pointing gesture - press left arrow key"
+    }
+  },
+  "notes": [
+    "This configuration file maps gesture IDs to keyboard keys.",
+    "Gesture IDs correspond to the labels in model/keypoint_classifier/keypoint_classifier_label.csv",
+    "To add a new gesture mapping:",
+    "1. Train a new gesture using the app (press 'k' for logging mode)",
+    "2. Add the gesture ID and corresponding key to this file",
+    "3. Restart the application",
+    "",
+    "Supported keys include:",
+    "- Arrow keys: 'up', 'down', 'left', 'right'",
+    "- Letter keys: 'a', 'b', 'c', etc.",
+    "- Number keys: '0', '1', '2', etc.",
+    "- Function keys: 'f1', 'f2', etc.",
+    "- Special keys: 'space', 'enter', 'esc', 'tab', etc.",
+    "",
+    "See keyboard library documentation for more key options:",
+    "https://github.com/boppreh/keyboard#api"
+  ]
+}
