@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 import csv
 import copy
-import pyautogui
-import time
 import argparse
 import itertools
 from collections import Counter
@@ -150,16 +148,14 @@ def main():
                 else:
                     point_history.append([0, 0])
 
-                
-                #Control Keyboard Inputs
-
+                # Control Keyboard Inputs
                 global previous_hand_sign_id  # Declare previous_hand_sign_id as a global variable
-    
+
                 # Release the previous key if it's different from the current hand_sign_id
                 if previous_hand_sign_id is not None and previous_hand_sign_id != hand_sign_id:
                     keyboard.release('right')
                     keyboard.release('left')
-                
+
                 # Handle the current hand_sign_id
                 if hand_sign_id == 1:
                     keyboard.press('right')
@@ -170,11 +166,9 @@ def main():
                 import os
                 os.chdir("C:\\Users\\Ethan")
 
+                # if hand_sign_id == 4:
+                #     os.startfile("lock.bat")
 
-                #if hand_sign_id == 4:
-                    #os.startfile("lock.bat")
-
-                
                 # Update the previous_hand_sign_id
                 previous_hand_sign_id = hand_sign_id
 
