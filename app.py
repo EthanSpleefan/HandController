@@ -165,6 +165,15 @@ def main():
                     keyboard.press('right')
                 elif hand_sign_id == 3:
                     keyboard.press('left')
+                elif hand_sign_id == 2:
+                    keyboard.press('up')
+                import os
+                os.chdir("C:\\Users\\Ethan")
+
+
+                #if hand_sign_id == 4:
+                    #os.startfile("lock.bat")
+
                 
                 # Update the previous_hand_sign_id
                 previous_hand_sign_id = hand_sign_id
